@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+pydantic-settings
+joblib
+scikit-learn==1.6.1
+xgboost
+xrpl-py
+psycopg2-binary
+pytest
+requests
+dill==0.4.0
+pandas
+shap>=0.43.0
+openai>=1.0.0
+python-dotenv

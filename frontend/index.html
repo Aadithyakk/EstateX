@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EstateX – RWA Real Estate Tokenization</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+      <div class="nav-content">
+        <div class="nav-brand">
+          <h1>EstateX</h1>
+          <p class="nav-subtitle">Real Estate Tokenization Platform</p>
+        </div>
+        <ul class="nav-menu">
+          <li><a href="#" onclick="navigateTo('dashboard')" class="nav-link active" data-page="dashboard">Dashboard</a></li>
+          <li><a href="#" onclick="navigateTo('properties')" class="nav-link" data-page="properties">Properties</a></li>
+          <li><a href="#" onclick="navigateTo('portfolio')" class="nav-link" data-page="portfolio">My Portfolio</a></li>
+          <li><a href="#" onclick="navigateTo('account')" class="nav-link" data-page="account">Account</a></li>
+        </ul>
+        <div class="nav-user">
+          <span id="user-status" class="user-status">Not Connected</span>
+        </div>
+        <!-- XRPL Proof Bar -->
+        <div id="xrpl-proof-bar" class="xrpl-proof-bar">
+          <div class="proof-item">
+            <span class="proof-label">Network:</span>
+            <span class="proof-value" id="proof-network">Testnet</span>
+          </div>
+          <div class="proof-item separator"></div>
+          <div class="proof-item">
+            <span class="proof-label">Ledger:</span>
+            <span class="proof-value" id="proof-ledger">—</span>
+          </div>
+          <div class="proof-item separator"></div>
+          <div class="proof-item">
+            <span id="proof-heartbeat" class="proof-heartbeat"></span>
+            <span class="proof-label">Live</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Dashboard Page -->
+      <div id="dashboard-page" class="page active">
+        <div class="page-header">
+          <h2>Dashboard</h2>
+          <p>Portfolio overview and platform statistics</p>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Portfolio Summary Card -->
+          <div class="card summary-card">
+            <h3>Portfolio Summary</h3>
+            <div class="summary-stats">
+              <div class="stat">
+                <span class="stat-label">Total Value</span>
+                <span class="stat-value" id="total-value">$0.00</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Holdings</span>
+                <span class="stat-value" id="total-holdings">0</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">KYC Status</span>
+                <span class="stat-value status-badge" id="kyc-status">Pending</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="card quick-actions-card">
+            <h3>Quick Actions</h3>
+            <button onclick="navigateTo('properties')" class="btn btn-primary">Browse Properties</button>
+            <button onclick="openModal('kyc-modal')" class="btn btn-secondary">Complete KYC</button>
+            <button onclick="openModal('wallet-modal')" class="btn btn-secondary">Link Wallet</button>
+          </div>
+
+          <!-- Recent Trades -->
+          <div class="card recent-trades-card">
+            <h3>Recent Activity</h3>
+            <div id="recent-trades" class="trade-list">
+              <p class="empty-state">No trades yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Properties Page -->
+      <div id="properties-page" class="page">
+        <div class="page-header">
+          <h2>Properties</h2>
+          <p>Browse and invest in tokenized real estate</p>
+        </div>
+
+        <div class="filters-section">
+          <input type="text" id="search-town" placeholder="Search by town..." class="filter-input">
+          <select id="filter-flat-type" class="filter-select">
+            <option value="">All Property Types</option>
+            <option value="1 ROOM">1 Room</option>
+            <option value="2 ROOM">2 Room</option>
+            <option value="3 ROOM">3 Room</option>
+            <option value="4 ROOM">4 Room</option>
+            <option value="5 ROOM">5 Room</option>
+          </select>
+          <select id="filter-min-price" class="filter-select">
+            <option value="">Min Price</option>
+            <option value="200000">$200k+</option>
+            <option value="400000">$400k+</option>
+            <option value="600000">$600k+</option>
+          </select>
+          <button onclick="filterProperties()" class="btn btn-small">Filter</button>
+        </div>
+
+        <div id="properties-grid" class="properties-grid">
+          <p class="loading">Loading properties...</p>
+        </div>
+      </div>
+
+      <!-- Property Detail Page -->
+      <div id="property-detail-page" class="page">
+        <button onclick="navigateTo('properties')" class="btn btn-text">&larr; Back to Properties</button>
+        <div id="property-detail-content">
+          <p class="loading">Loading property details...</p>
+        </div>
+      </div>
+
+      <!-- Portfolio Page -->
+      <div id="portfolio-page" class="page">
+        <div class="page-header">
+          <h2>My Portfolio</h2>
+          <p>Your token holdings and positions</p>
+        </div>
+
+        <div id="portfolio-holdings" class="portfolio-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Town</th>
+                <th>Units Held</th>
+                <th>Current Value</th>
+                <th>NAV (AI)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="holdings-body">
+              <tr class="empty-row"><td colspan="6" class="empty-state">No holdings yet. Start by purchasing a property.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Account Page -->
+      <div id="account-page" class="page">
+        <div class="page-header">
+          <h2>Account Settings</h2>
+          <p>Manage your profile, KYC, and wallet</p>
+        </div>
+
+        <div class="account-sections">
+          <div class="card account-section">
+            <h3>KYC Verification</h3>
+            <div class="status-row">
+              <span>Status:</span>
+              <span id="kyc-status-detail" class="status-badge">Not Started</span>
+            </div>
+            <p id="kyc-message" class="status-message"></p>
+            <button onclick="openModal('kyc-modal')" class="btn btn-primary">Start KYC</button>
+          </div>
+
+          <div class="card account-section">
+            <h3>XRPL Wallet</h3>
+            <div class="status-row">
+              <span>Wallet Address:</span>
+              <code id="wallet-address">Not connected</code>
+            </div>
+            <div class="status-row">
+              <span>Trustlines:</span>
+              <span id="trustline-count">0</span>
+            </div>
+            <button onclick="openModal('wallet-modal')" class="btn btn-primary">Link/Update Wallet</button>
+          </div>
+
+          <div class="card account-section">
+            <h3>Transaction History</h3>
+            <div id="tx-history" class="tx-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>TX Hash</th>
+                  </tr>
+                </thead>
+                <tbody id="tx-body">
+                  <tr class="empty-row"><td colspan="5" class="empty-state">No transactions yet</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modals -->
+    <!-- Property Trade Modal -->
+    <div id="trade-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('trade-modal')">&times;</span>
+        <h3>Purchase Property Tokens</h3>
+        <div id="trade-form-content">
+          <div class="form-group">
+            <label>Property</label>
+            <span id="trade-property-name"></span>
+          </div>
+          <div class="form-group">
+            <label>Current NAV (AI Valuation)</label>
+            <span id="trade-nav" class="price-highlight"></span>
+          </div>
+          <div class="form-group">
+            <label>Units to Purchase</label>
+            <input type="number" id="trade-units" placeholder="0.5" min="0.001" step="0.001">
+          </div>
+          <div class="form-group">
+            <label>Quote</label>
+            <div id="quote-breakdown" class="quote-breakdown">
+              <div class="quote-row">
+                <span>NAV:</span>
+                <span id="quote-nav">-</span>
+              </div>
+              <div class="quote-row">
+                <span>Spread:</span>
+                <span id="quote-spread">-</span>
+              </div>
+              <div class="quote-row">
+                <span>Fees:</span>
+                <span id="quote-fees">-</span>
+              </div>
+              <div class="quote-row total">
+                <span>Total:</span>
+                <span id="quote-total">-</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="executeTrade()" class="btn btn-primary btn-block">Execute Trade</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KYC Modal -->
+    <div id="kyc-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('kyc-modal')">&times;</span>
+        <h3>KYC Verification</h3>
+        <form onsubmit="submitKYC(event)">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="kyc-name" required>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="kyc-email" required>
+          </div>
+          <div class="form-group">
+            <label>Accreditation</label>
+            <select id="kyc-accreditation" required>
+              <option value="">Select...</option>
+              <option value="individual">Individual Investor</option>
+              <option value="accredited">Accredited Investor</option>
+              <option value="institutional">Institutional</option>
+            </select>
+          </div>
+          <div class="form-group checkbox">
+            <input type="checkbox" id="kyc-agree" required>
+            <label for="kyc-agree">I agree to the terms and conditions</label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Submit KYC</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Wallet Modal -->
+    <div id="wallet-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('wallet-modal')">&times;</span>
+        <h3>Link XRPL Wallet</h3>
+        <form onsubmit="linkWallet(event)">
+          <div class="form-group">
+            <label>XRPL Wallet Address</label>
+            <input type="text" id="wallet-input" placeholder="rN7n7otQDd6FczFgLdlqtyMVrn..." required>
+          </div>
+          <div class="form-group">
+            <label>Custody Type</label>
+            <select id="custody-type" required>
+              <option value="">Select...</option>
+              <option value="self">Self-Hosted Wallet</option>
+              <option value="custodian">Custodian</option>
+            </select>
+          </div>
+          <p class="info-text">⚠️ Do not share your private keys. Only provide your public address.</p>
+          <button type="submit" class="btn btn-primary btn-block">Link Wallet</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Transaction Receipt Drawer -->
+    <div id="tx-receipt-drawer" class="tx-receipt-drawer">
+      <div class="tx-receipt-header">
+        <h3>Transaction Receipt</h3>
+        <button onclick="closeTxReceipt()" class="close-btn">&times;</button>
+      </div>
+      <div class="tx-receipt-steps" id="tx-receipt-steps">
+        <!-- Dynamically populated -->
+      </div>
+      <div class="tx-receipt-footer">
+        <button onclick="closeTxReceipt()" class="btn btn-secondary btn-block">Done</button>
+      </div>
+    </div>
+
+    <!-- Trustline Handshake Modal -->
+    <div id="trustline-handshake-modal" class="modal">
+      <div class="modal-content" style="text-align: center;">
+        <h3>Setting up SGPROP Trustline</h3>
+        <div class="trustline-animation">
+          <div class="handshake-left">👤 You</div>
+          <div class="handshake-arrow">↔️</div>
+          <div class="handshake-right">🏦 Issuer</div>
+        </div>
+        <p id="trustline-status" style="margin-top: 20px; color: #666;">Creating trustline...</p>
+        <div id="trustline-badge" style="display: none; margin-top: 20px;">
+          <span class="status-badge approved">✓ Trustline Authorized</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Activity Feed Modal -->
+    <div id="activity-feed-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('activity-feed-modal')">&times;</span>
+        <h3>Live Activity Feed</h3>
+        <div id="activity-feed" class="activity-feed">
+          <p class="empty-state">Connecting to ledger...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chatbot Widget -->
+  <div id="chatbot-widget" class="chatbot-widget">
+    <button id="chatbot-toggle" class="chatbot-toggle" onclick="toggleChatbot()">
+      💬 Chat
+    </button>
+    <div id="chatbot-panel" class="chatbot-panel" style="display:none;">
+      <div class="chatbot-header">
+        <h3>Eigenrestarea Assistant</h3>
+        <button onclick="toggleChatbot()" class="close-btn">✕</button>
+      </div>
+      <div id="chatbot-messages" class="chatbot-messages"></div>
+      <div class="chatbot-input">
+        <input type="text" id="chatbot-input" placeholder="Ask about properties, pricing, trading..." />
+        <button onclick="sendChatMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
